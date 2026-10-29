@@ -1,42 +1,10 @@
 #!/usr/bin/env python3
-"""
-tinyclient.py — Tiny Web Client
-
-Client HTTP/HTTPS minimaliste implémenté au niveau des sockets bruts,
-sans bibliothèque HTTP de haut niveau (pas de requests, urllib, http.client...).
-
-Fonctionnalités obligatoires :
-  - Parsing d'URL
-  - Validation / assainissement des entrées (longueur, protocole, caractères de contrôle)
-  - Résolution DNS (getaddrinfo)
-  - Connexion TCP avec timeout
-  - Envoi d'une requête GET conforme HTTP/1.1 (Host, Connection: close)
-  - Réception bornée de la réponse (protection contre les réponses trop grandes)
-  - Parsing statut / en-têtes / corps
-  - Affichage clair du résultat
-
-Bonus implémentés :
-  - [Priorité 1] Support HTTPS via le module ssl, avec vérification de certificat
-    (et option --no-verify pour DÉMONTRER le danger, cf. badssl.com)
-  - [Priorité 2] Décodage du Transfer-Encoding: chunked
-  - [Priorité 3] Gestion des redirections 301/302 (anti-boucle, refus HTTPS -> HTTP)
-  - Méthode POST avec corps de requête (--data)
-  - Sauvegarde du corps de la réponse dans un fichier (-o / --output)
-  - Option --head (n'affiche/ne récupère que les en-têtes)
-  - Mesure du temps de réponse du serveur
-
-Auteur : (à compléter par l'étudiant)
-"""
 
 import argparse
 import socket
 import ssl
 import sys
 import time
-
-# ---------------------------------------------------------------------------
-# Constantes de configuration
-# ---------------------------------------------------------------------------
 
 DEFAULT_TIMEOUT = 10          # secondes
 MAX_RESPONSE_SIZE = 10 * 1024 * 1024   # 10 Mo
@@ -47,12 +15,7 @@ SUPPORTED_SCHEMES = ("http", "https")
 
 
 class TinyClientError(Exception):
-    """Erreur générique et volontairement explicite pour l'utilisateur final."""
-
-
-# ---------------------------------------------------------------------------
-# 1. Validation des entrées (Section 3.1 du cahier des charges)
-# ---------------------------------------------------------------------------
+ 
 
 def validate_url_string(url: str) -> None:
     """Valide l'URL brute AVANT tout parsing / toute connexion réseau.
@@ -150,7 +113,6 @@ def parse_url(url: str):
 # ---------------------------------------------------------------------------
 
 def resolve_and_connect(host: str, port: int, timeout: float = DEFAULT_TIMEOUT) -> socket.socket:
-    """Résout le nom d'hôte puis établit la connexion TCP avec timeout."""
     try:
         addr_infos = socket.getaddrinfo(host, port, proto=socket.IPPROTO_TCP)
     except socket.gaierror:
@@ -174,7 +136,6 @@ def resolve_and_connect(host: str, port: int, timeout: float = DEFAULT_TIMEOUT) 
 
 
 def wrap_tls(sock: socket.socket, host: str, verify: bool = True, verbose: bool = False) -> ssl.SSLSocket:
-    """Enveloppe le socket TCP avec TLS (bonus priorité 1).
 
     verify=False désactive volontairement la vérification du certificat :
     cette option n'existe QUE pour la démonstration pédagogique du danger
